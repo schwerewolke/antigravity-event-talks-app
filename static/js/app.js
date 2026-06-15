@@ -18,10 +18,12 @@ const feedStatus = document.getElementById('feed-status');
 const refreshBtn = document.getElementById('refresh-btn');
 const spinner = document.getElementById('spinner');
 const retryBtn = document.getElementById('retry-btn');
+const exportCsvBtn = document.getElementById('export-csv-btn');
 
 const searchInput = document.getElementById('search-input');
 const filterBtns = document.querySelectorAll('.filter-btn');
 const sortSelect = document.getElementById('sort-select');
+const themeCheckbox = document.getElementById('theme-checkbox');
 
 // Stats Elements
 const statTotal = document.querySelector('#stat-total .stat-num');
@@ -47,6 +49,7 @@ const toastMessage = document.getElementById('toast-message');
 
 // Initialize Application
 document.addEventListener('DOMContentLoaded', () => {
+    initTheme();
     initEventListeners();
     fetchNotes(false);
 });
@@ -76,6 +79,24 @@ function initEventListeners() {
         activeSort = e.target.value;
         renderNotes();
     });
+
+    // Theme Switch
+    if (themeCheckbox) {
+        themeCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                document.body.classList.add('light-theme');
+                localStorage.setItem('theme', 'light');
+            } else {
+                document.body.classList.remove('light-theme');
+                localStorage.setItem('theme', 'dark');
+            }
+        });
+    }
+
+    // CSV Export
+    if (exportCsvBtn) {
+        exportCsvBtn.addEventListener('click', exportToCSV);
+    }
 
     // Drawer Controls
     closeDrawerBtn.addEventListener('click', closeDrawer);
@@ -311,7 +332,10 @@ function renderNotes() {
                     </div>
                 </div>
                 <div class="card-actions">
-                    <button class="btn-card-tweet" title="Tweet this update">
+                    <button class="btn-card-copy" title="Inhalt kopieren">
+                        <i class="fa-solid fa-copy"></i>
+                    </button>
+                    <button class="btn-card-tweet" title="Tweet composer öffnen">
                         <i class="fa-brands fa-x-twitter"></i>
                     </button>
                 </div>
@@ -331,6 +355,18 @@ function renderNotes() {
                 e.stopPropagation();
                 selectUpdate(update, entry.date, entry.link, updateKey);
                 openDrawer();
+            });
+
+            // Prevent event propagation for the inner card copy button
+            const cardCopyBtn = card.querySelector('.btn-card-copy');
+            cardCopyBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(update.text).then(() => {
+                    showToast('Inhalt in Zwischenablage kopiert!');
+                }).catch(err => {
+                    console.error('Could not copy card text:', err);
+                    showToast('Kopieren fehlgeschlagen.');
+                });
             });
 
             cardList.appendChild(card);
@@ -496,4 +532,65 @@ function showToast(message) {
     setTimeout(() => {
         toast.classList.add('hidden');
     }, 3000);
+}
+
+// Action: Export filtered and sorted release notes to CSV
+function exportToCSV() {
+    const filteredEntries = getFilteredAndSortedNotes();
+    if (filteredEntries.length === 0) {
+        showToast('Keine Daten zum Exportieren vorhanden.');
+        return;
+    }
+
+    // CSV headers
+    let csvContent = "Datum,Kategorie,Inhalt,Original-Link\r\n";
+
+    // Loop through entries and updates
+    filteredEntries.forEach(entry => {
+        const date = entry.date;
+        const link = entry.link;
+
+        entry.updates.forEach(update => {
+            const type = update.type;
+            // Clean up text content by removing multiple whitespaces/newlines and escaping quotes
+            let text = update.text;
+            text = text.replace(/"/g, '""'); // Escape double quotes
+            text = text.replace(/\r?\n|\r/g, ' '); // Replace newlines with spaces
+
+            // Construct row, encapsulating fields in quotes
+            const row = `"${date}","${type}","${text}","${link}"\r\n`;
+            csvContent += row;
+        });
+    });
+
+    // Create a Blob containing the CSV data (with UTF-8 BOM for MS Excel compatibility)
+    const blob = new Blob([new Uint8Array([0xEF, 0xBB, 0xBF]), csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    // Create a temporary link and trigger download
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", "bigquery_release_notes.csv");
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    showToast('CSV erfolgreich heruntergeladen!');
+}
+
+// Initialize light/dark theme preference
+function initTheme() {
+    const savedTheme = localStorage.getItem('theme') || 'dark';
+    if (savedTheme === 'light') {
+        document.body.classList.add('light-theme');
+        if (themeCheckbox) {
+            themeCheckbox.checked = true;
+        }
+    } else {
+        document.body.classList.remove('light-theme');
+        if (themeCheckbox) {
+            themeCheckbox.checked = false;
+        }
+    }
 }

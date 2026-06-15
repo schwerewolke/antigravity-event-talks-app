@@ -110,6 +110,23 @@
                     <p class="feed-status" id="feed-status">Checking for updates...</p>
                 </div>
                 <div class="header-actions">
+                    <!-- Theme Switch Toggle -->
+                    <div class="theme-switch-wrapper">
+                        <span class="theme-label" title="Dunkelmodus"><i class="fa-solid fa-moon"></i></span>
+                        <label class="theme-switch" for="theme-checkbox">
+                            <input type="checkbox" id="theme-checkbox">
+                            <span class="slider round"></span>
+                        </label>
+                        <span class="theme-label" title="Hellmodus"><i class="fa-solid fa-sun"></i></span>
+                    </div>
+
+                    <!-- CSV Export Button -->
+                    <button id="export-csv-btn" class="btn btn-secondary" title="Gefilterte Ansicht als CSV exportieren">
+                        <i class="fa-solid fa-file-csv"></i>
+                        <span>CSV exportieren</span>
+                    </button>
+
+                    <!-- Refresh Button -->
                     <button id="refresh-btn" class="btn btn-primary">
                         <i class="fa-solid fa-arrows-rotate refresh-icon" id="spinner"></i>
                         <span>Refresh Notes</span>
