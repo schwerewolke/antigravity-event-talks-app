@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BigQuery Release Hub</title>
+    <!-- Google Fonts: Outfit -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Main Sidebar / Filter Section -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-database-arrow-up"></i>
+                </div>
+                <div class="brand-text">
+                    <h1>BQ Release Hub</h1>
+                    <span class="sub-brand">Google BigQuery Tracker</span>
+                </div>
+            </div>
+
+            <!-- Stats Panel -->
+            <div class="panel-section">
+                <h3 class="section-title">Overview Stats</h3>
+                <div class="stats-grid">
+                    <div class="stat-card" id="stat-total">
+                        <span class="stat-num">0</span>
+                        <span class="stat-label">Total Updates</span>
+                    </div>
+                    <div class="stat-card" id="stat-features">
+                        <span class="stat-num">0</span>
+                        <span class="stat-label">Features</span>
+                    </div>
+                    <div class="stat-card" id="stat-breaking">
+                        <span class="stat-num">0</span>
+                        <span class="stat-label">Breaking</span>
+                    </div>
+                    <div class="stat-card" id="stat-issues">
+                        <span class="stat-num">0</span>
+                        <span class="stat-label">Issues/Fixes</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters Section -->
+            <div class="panel-section">
+                <h3 class="section-title">Filters</h3>
+                
+                <div class="search-box">
+                    <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                    <input type="text" id="search-input" placeholder="Search release notes...">
+                </div>
+
+                <div class="filter-group">
+                    <label class="group-label">Category Filters</label>
+                    <div class="category-buttons">
+                        <button class="filter-btn active" data-category="all">
+                            <i class="fa-solid fa-list-ul"></i> All
+                        </button>
+                        <button class="filter-btn" data-category="Feature">
+                            <span class="badge badge-feature"></span> Feature
+                        </button>
+                        <button class="filter-btn" data-category="Breaking">
+                            <span class="badge badge-breaking"></span> Breaking
+                        </button>
+                        <button class="filter-btn" data-category="Change">
+                            <span class="badge badge-change"></span> Change
+                        </button>
+                        <button class="filter-btn" data-category="Announcement">
+                            <span class="badge badge-announcement"></span> Announcement
+                        </button>
+                        <button class="filter-btn" data-category="Issue">
+                            <span class="badge badge-issue"></span> Issue
+                        </button>
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label class="group-label" for="sort-select">Sort Order</label>
+                    <select id="sort-select" class="custom-select">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <p>Data loaded from official Google Cloud BigQuery RSS feed.</p>
+                <div class="footer-links">
+                    <a href="https://docs.cloud.google.com/feeds/bigquery-release-notes.xml" target="_blank">
+                        <i class="fa-solid fa-rss"></i> XML Feed
+                    </a>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Release Notes Area -->
+        <main class="main-content">
+            <header class="main-header">
+                <div class="header-left">
+                    <h2>Release Feed</h2>
+                    <p class="feed-status" id="feed-status">Checking for updates...</p>
+                </div>
+                <div class="header-actions">
+                    <button id="refresh-btn" class="btn btn-primary">
+                        <i class="fa-solid fa-arrows-rotate refresh-icon" id="spinner"></i>
+                        <span>Refresh Notes</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Loading overlay or state -->
+            <div id="loading-state" class="loading-state hidden">
+                <div class="spinner-container">
+                    <div class="pulse-ring"></div>
+                    <i class="fa-solid fa-database pulse-icon"></i>
+                </div>
+                <p>Fetching the latest BigQuery release notes...</p>
+            </div>
+
+            <!-- Error state -->
+            <div id="error-state" class="error-state hidden">
+                <i class="fa-solid fa-circle-exclamation error-icon"></i>
+                <h3>Failed to Load Feed</h3>
+                <p id="error-message">Could not fetch release notes. Please try again later.</p>
+                <button id="retry-btn" class="btn btn-secondary">Retry</button>
+            </div>
+
+            <!-- Notes List -->
+            <div id="notes-container" class="notes-container">
+                <!-- Javascript will inject data here -->
+            </div>
+        </main>
+
+        <!-- Tweet Drawer / Share Panel -->
+        <div id="tweet-drawer" class="tweet-drawer">
+            <div class="drawer-header">
+                <h3><i class="fa-brands fa-x-twitter"></i> Tweet Composer</h3>
+                <button id="close-drawer-btn" class="close-btn">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <!-- Selected update preview -->
+                <div class="selected-update-preview">
+                    <span class="preview-badge" id="preview-category">Feature</span>
+                    <span class="preview-date" id="preview-date">June 15, 2026</span>
+                    <div class="preview-text" id="preview-content">
+                        Select an update to tweet about it.
+                    </div>
+                </div>
+
+                <div class="tweet-form-group">
+                    <label for="tweet-textarea" class="form-label">Customize Your Tweet</label>
+                    <textarea id="tweet-textarea" class="tweet-input" rows="6" maxlength="500" placeholder="Compose your tweet..."></textarea>
+                    <div class="tweet-char-counter">
+                        <span id="char-count">0</span> / 280 characters
+                    </div>
+                </div>
+
+                <!-- Template selector -->
+                <div class="template-selector">
+                    <label class="form-label">Templates</label>
+                    <div class="template-buttons">
+                        <button class="template-btn active" data-style="professional">Professional</button>
+                        <button class="template-btn" data-style="hype">Excited</button>
+                        <button class="template-btn" data-style="minimal">Minimalist</button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="copy-tweet-btn" class="btn btn-secondary">
+                        <i class="fa-solid fa-copy"></i> Copy Text
+                    </button>
+                    <button id="post-tweet-btn" class="btn btn-tweet">
+                        <i class="fa-brands fa-x-twitter"></i> Post to X
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast hidden">
+        <i class="fa-solid fa-check-circle toast-icon"></i>
+        <span id="toast-message">Copied to clipboard!</span>
+    </div>
+
+    <!-- Custom JS -->
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
